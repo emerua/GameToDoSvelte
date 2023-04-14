@@ -83,7 +83,7 @@ export function newTaskForm() {
 }
 
 
-export function applyTaskForm(task: Task, taskForm: TaskForm) {
+export function applyTaskForm(task: Task, taskForm: TaskForm, currentDatetime: Date) {
     task.title = taskForm.title;
     task.currentVal = taskForm.currentVal;
     task.maxVal = taskForm.maxVal;
@@ -99,8 +99,7 @@ export function applyTaskForm(task: Task, taskForm: TaskForm) {
     }
     else {
         task.cronSchedule = `${taskForm.cronMinute} ${taskForm.cronHour} ${taskForm.cronDay} ${taskForm.cronMonth} ${taskForm.cronWeek}`;
-        task.nextRecoveryDateTime = new Date();
-        setNextScheduleTime(task);
+        setNextScheduleTime(task, currentDatetime);
     }
 
     return task;
@@ -156,7 +155,13 @@ export function getRemainAllTime(task: Task, currentDatetime: Date) {
     }
 
     const nextVal = Math.min(task.currentVal + task.recoveryVal, task.maxVal);
-    const recoveryTimes = Math.ceil((task.maxVal - nextVal) / task.recoveryVal | 0);
+
+    let recoveryTimes = 0;
+    if(task.recoveryCategory === recoveryCategoryOptions[0]) {
+        recoveryTimes = Math.floor((task.maxVal - task.currentVal) / task.recoveryVal) | 0;
+    } else {
+        recoveryTimes = Math.ceil((task.maxVal - nextVal) / task.recoveryVal) | 0;
+    }
 
     if(task.timeSetting === timeSettingOptions[1]) {
         try {
@@ -174,6 +179,7 @@ export function getRemainAllTime(task: Task, currentDatetime: Date) {
             throw new Error("cronShedule was broken");
         }
     } else {
+        
         let duration = getRemainTime(task, currentDatetime);
 
         const offsetTime = recoveryTimes * task.recoveryInterval!;
@@ -190,18 +196,18 @@ export function formatRemainTime(duration: number) {
     return `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}:${second.toString().padStart(2, "0")}`;
 }
 
-export function setNextScheduleTime(task: Task) {
+export function setNextScheduleTime(task: Task, resetDatetime: Date) {
     if(task.timeSetting === timeSettingOptions[1]) {
         try {
             const cronExpr = parser.parseExpression(task.cronSchedule!);
-            cronExpr.reset(task.nextRecoveryDateTime);
+            cronExpr.reset(resetDatetime);
             task.nextRecoveryDateTime = cronExpr.next().toDate();
         }
         catch {
             throw new Error("cronShedule was broken");
         }
     } else {
-        task.nextRecoveryDateTime = addMinutes(task.nextRecoveryDateTime, task.recoveryInterval!);
+        task.nextRecoveryDateTime = addMinutes(resetDatetime, task.recoveryInterval!);
     }
 
 

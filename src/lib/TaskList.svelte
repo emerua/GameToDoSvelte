@@ -56,7 +56,7 @@
   };
 
   async function putTask(event: CustomEvent) {
-    let task: Task = applyTaskForm(newTask(group.id!), taskForm);
+    let task: Task = applyTaskForm(newTask(group.id!), taskForm, currentDatetime);
     if (taskId >= 0) {
       task.id = taskId;
     }
