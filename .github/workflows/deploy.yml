@@ -1,0 +1,30 @@
+name: deploy-to-github-pages
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: setup node.js
+        uses: actions/setup-node@v3.6.0
+      
+      - name: setup app env
+        run: npm i
+      
+      - name: build static resources
+        run: npm run build
+          
+      - name: deploy to github pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_API_TOKEN }}
+          publish_dir: build
